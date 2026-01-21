@@ -2,7 +2,18 @@
 
 GoBGP v4.2.0 の RPM パッケージビルド用リポジトリです。
 
-## ビルド手順
+## yum リポジトリとして利用
+
+```bash
+# リポジトリ追加
+sudo curl -o /etc/yum.repos.d/GoBGP.repo \
+  https://ryskn.github.io/GoBGP/GoBGP.repo
+
+# インストール
+sudo dnf install gobgp
+```
+
+## 手動ビルド手順
 
 ### 1. 必要なパッケージのインストール
 

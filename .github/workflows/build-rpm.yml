@@ -1,0 +1,67 @@
+name: Build RPM and Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: rockylinux:9
+    steps:
+      - name: Install build dependencies
+        run: |
+          dnf install -y rpm-build rpmdevtools golang git createrepo_c
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup rpmbuild directory
+        run: |
+          mkdir -p ~/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+          cp SPECS/GoBGP.spec ~/rpmbuild/SPECS/
+          cp SOURCES/* ~/rpmbuild/SOURCES/
+
+      - name: Download source
+        run: |
+          cd ~/rpmbuild
+          spectool -g -R SPECS/GoBGP.spec
+
+      - name: Build RPM
+        run: |
+          cd ~/rpmbuild
+          rpmbuild -ba SPECS/GoBGP.spec
+
+      - name: Create yum repository
+        run: |
+          mkdir -p repo
+          cp ~/rpmbuild/RPMS/*/*.rpm repo/
+          cp GoBGP.repo repo/
+          createrepo_c repo/
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: repo
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
