@@ -69,6 +69,6 @@ exit 0
 %config(noreplace) %attr(0640, root, gobgpd) %{_sysconfdir}/gobgpd/gobgpd.conf
 
 %changelog
-* Sun Jan 19 2026 ryosuke.nakayama@ryskn.com - 4.2.0-1
+* Sun Jan 19 2025 Ryosuke Nakayama <ryosuke.nakayama@ryskn.com> - 4.2.0-1
 - Initial package
 - Add systemd service file

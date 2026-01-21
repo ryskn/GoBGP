@@ -22,7 +22,7 @@ jobs:
     steps:
       - name: Install build dependencies
         run: |
-          dnf install -y rpm-build rpmdevtools golang git createrepo_c
+          dnf install -y rpm-build rpmdevtools golang git createrepo_c systemd-rpm-macros
 
       - name: Checkout
         uses: actions/checkout@v4
