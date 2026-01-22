@@ -20,6 +20,7 @@ jobs:
     strategy:
       matrix:
         arch: [x86_64, aarch64]
+        el: [8, 9, 10]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -27,12 +28,21 @@ jobs:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
+      - name: Set container image
+        id: container
+        run: |
+          if [ "${{ matrix.el }}" = "10" ]; then
+            echo "image=quay.io/rockylinux/rockylinux:10" >> $GITHUB_OUTPUT
+          else
+            echo "image=rockylinux:${{ matrix.el }}" >> $GITHUB_OUTPUT
+          fi
+
       - name: Build RPM in container
         run: |
           docker run --rm --platform linux/${{ matrix.arch == 'x86_64' && 'amd64' || 'arm64' }} \
             -v ${{ github.workspace }}:/workspace \
             -w /workspace \
-            rockylinux:9 bash -c '
+            ${{ steps.container.outputs.image }} bash -c '
               dnf install -y rpm-build rpmdevtools golang git systemd-rpm-macros
               mkdir -p ~/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
               cp SPECS/GoBGP.spec ~/rpmbuild/SPECS/
@@ -46,7 +56,7 @@ jobs:
       - name: Upload RPM artifact
         uses: actions/upload-artifact@v4
         with:
-          name: rpm-${{ matrix.arch }}
+          name: rpm-el${{ matrix.el }}-${{ matrix.arch }}
           path: "*.rpm"
 
   deploy:
