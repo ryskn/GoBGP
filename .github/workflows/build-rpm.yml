@@ -17,43 +17,37 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container:
-      image: rockylinux:9
+    strategy:
+      matrix:
+        arch: [x86_64, aarch64]
     steps:
-      - name: Install build dependencies
-        run: |
-          dnf install -y rpm-build rpmdevtools golang git createrepo_c systemd-rpm-macros
-
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup rpmbuild directory
-        run: |
-          mkdir -p ~/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
-          cp SPECS/GoBGP.spec ~/rpmbuild/SPECS/
-          cp SOURCES/* ~/rpmbuild/SOURCES/
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
 
-      - name: Download source
+      - name: Build RPM in container
         run: |
-          cd ~/rpmbuild
-          spectool -g -R SPECS/GoBGP.spec
+          docker run --rm --platform linux/${{ matrix.arch == 'x86_64' && 'amd64' || 'arm64' }} \
+            -v ${{ github.workspace }}:/workspace \
+            -w /workspace \
+            rockylinux:9 bash -c '
+              dnf install -y rpm-build rpmdevtools golang git systemd-rpm-macros
+              mkdir -p ~/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+              cp SPECS/GoBGP.spec ~/rpmbuild/SPECS/
+              cp SOURCES/* ~/rpmbuild/SOURCES/
+              cd ~/rpmbuild
+              spectool -g -R SPECS/GoBGP.spec
+              rpmbuild -ba SPECS/GoBGP.spec
+              cp RPMS/*/*.rpm /workspace/
+            '
 
-      - name: Build RPM
-        run: |
-          cd ~/rpmbuild
-          rpmbuild -ba SPECS/GoBGP.spec
-
-      - name: Create yum repository
-        run: |
-          mkdir -p repo
-          cp ~/rpmbuild/RPMS/*/*.rpm repo/
-          cp GoBGP.repo repo/
-          createrepo_c repo/
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+      - name: Upload RPM artifact
+        uses: actions/upload-artifact@v4
         with:
-          path: repo
+          name: rpm-${{ matrix.arch }}
+          path: "*.rpm"
 
   deploy:
     needs: build
@@ -62,6 +56,29 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download all RPM artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: rpms
+          pattern: rpm-*
+          merge-multiple: true
+
+      - name: Create yum repository
+        run: |
+          sudo dnf install -y createrepo_c
+          mkdir -p repo
+          cp rpms/*.rpm repo/
+          cp GoBGP.repo repo/
+          createrepo_c repo/
+
+      - name: Upload pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: repo
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
