@@ -1,5 +1,5 @@
 [gobgp]
 name=GoBGP Repository
-baseurl=https://ryskn.github.io/GoBGP/
+baseurl=https://ryskn.github.io/GoBGP/$releasever/
 enabled=1
 gpgcheck=0

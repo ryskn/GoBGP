@@ -80,10 +80,14 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y createrepo-c
-          mkdir -p repo
-          cp rpms/*.rpm repo/
+          mkdir -p repo/{8,9,10}
+          cp rpms/*el8*.rpm repo/8/
+          cp rpms/*el9*.rpm repo/9/
+          cp rpms/*el10*.rpm repo/10/
           cp GoBGP.repo repo/
-          createrepo_c repo/
+          for version in 8 9 10; do
+            createrepo_c repo/$version/
+          done
 
       - name: Upload pages artifact
         uses: actions/upload-pages-artifact@v3
