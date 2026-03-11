@@ -1,0 +1,26 @@
+# RPM build directories (generated during build)
+BUILD/
+BUILDROOT/
+RPMS/
+SRPMS/
+
+# Source tarballs (downloaded from upstream)
+SOURCES/*.tar.gz
+SOURCES/*.tar.bz2
+SOURCES/*.tar.xz
+SOURCES/*.tgz
+SOURCES/*.zip
+
+# Keep config files in SOURCES
+!SOURCES/*.conf
+!SOURCES/*.service
+
+# Editor backup files
+*~
+*.swp
+*.swo
+.*.swp
+
+# OS generated files
+.DS_Store
+Thumbs.db
