@@ -2,7 +2,7 @@
 %global debug_package %{nil}
 
 Name:           gobgp
-Version:        4.2.0
+Version:        4.3.0
 Release:        1%{?dist}
 Summary:        BGP implementation in Go
 
@@ -69,6 +69,9 @@ exit 0
 %config(noreplace) %attr(0640, root, gobgpd) %{_sysconfdir}/gobgpd/gobgpd.conf
 
 %changelog
-* Sun Jan 19 2026 ryosuke.nakayama@ryskn.com - 4.2.0-1
+* Thu Mar 12 2026 Ryosuke Nakayama <ryosuke.nakayama@ryskn.com> - 4.3.0-1
+- Update to 4.3.0
+
+* Sun Jan 19 2026 Ryosuke Nakayama <ryosuke.nakayama@ryskn.com> - 4.2.0-1
 - Initial package
 - Add systemd service file
